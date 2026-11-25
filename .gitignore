@@ -1,0 +1,21 @@
+# Local environments, secrets and caches
+.venv/
+venv/
+.env
+.env.*
+!.env.example
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.DS_Store
+# Input documents and conversion output stay local
+input/
+output/
+tmp/
+*.pdf
+*.doc
+*.docx
+*.xls
+*.xlsx
+*.ocr.pdf
+*_media/

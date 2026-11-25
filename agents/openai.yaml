@@ -1,0 +1,4 @@
+interface:
+  display_name: "Doc2MD"
+  short_description: "Chuyển DOCX, XLSX và PDF sang Markdown"
+  default_prompt: "Use $doc2md to convert this document to Markdown and verify the output."
