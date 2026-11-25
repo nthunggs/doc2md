@@ -174,7 +174,14 @@ def pdf_is_scanned(input_path: Path, sample_size: int = 5) -> tuple[bool, dict[s
         "avg_chars": chars / pages,
         "image_only_ratio": image_only / pages,
     }
-    return stats["avg_chars"] < 80 or stats["image_only_ratio"] > 0.5, stats
+    # A short text PDF is still digital: low character count alone is not
+    # evidence of a scan. Zero extracted text may also indicate vector outlines.
+    scanned = (
+        stats["avg_chars"] == 0
+        or stats["image_only_ratio"] > 0.5
+        or (stats["avg_chars"] < 80 and stats["image_only_ratio"] > 0)
+    )
+    return scanned, stats
 
 
 def _page_has_table_signal(page: Any) -> bool:

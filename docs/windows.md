@@ -47,7 +47,7 @@ choco install tesseract --yes
 .\verify-doc2md.cmd "C:\Tai lieu\Ket qua\Bản scan.md" --require-pages
 ```
 
-Tùy chọn `--ocr` cài OCRmyPDF và tải dữ liệu `eng`, `vie`, `osd` từ repo chính thức `tesseract-ocr/tessdata_fast` tại commit cố định vào `.venv/share/tessdata`. Wrapper dùng dữ liệu này cho mỗi lần chuyển; không cần ghi thêm dữ liệu vào Program Files. Wrapper nhận Tesseract ở `C:\Program Files\Tesseract-OCR`; nếu cài vị trí khác, thêm thư mục chứa `tesseract.exe` vào PATH của Terminal.
+Tùy chọn `--ocr` cài OCRmyPDF và tải dữ liệu `eng`, `vie`, `osd` từ repo chính thức `tesseract-ocr/tessdata_fast` tại commit cố định vào `.venv/share/tessdata`. Bộ cài sao chép cấu hình `configs`/`tessconfigs` từ Tesseract đã cài để giữ chức năng xuất hOCR/PDF khi dùng dữ liệu ngôn ngữ riêng. Wrapper dùng dữ liệu này cho mỗi lần chuyển; không cần ghi thêm dữ liệu vào Program Files. Wrapper nhận Tesseract ở `C:\Program Files\Tesseract-OCR`; nếu cài vị trí khác, thêm thư mục chứa `tesseract.exe` vào PATH của Terminal.
 
 Nhánh OCR mới dùng PyMuPDF đọc PDF sau OCR, nên không cần Poppler/`pdftotext`. Nó yêu cầu đầu ra PDF thường và tắt tối ưu ảnh; không dùng chuyển đổi PDF/A. Ghostscript không cần cho luồng này với phiên bản OCRmyPDF đã ghim. Apple Vision chỉ được dùng trên macOS.
 

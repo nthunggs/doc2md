@@ -9,6 +9,7 @@ import json
 import shutil
 import statistics
 import subprocess
+import sys
 import tempfile
 import time
 from pathlib import Path
@@ -68,9 +69,9 @@ def main() -> int:
         old_output = old_dir / f"{args.input.stem}.md"
         fast_output = fast_dir / f"{args.input.stem}.md"
 
-        old_command = ["python3", str(args.doc2md), str(args.input), "-o", str(old_dir), "--overwrite"]
+        old_command = [sys.executable, str(args.doc2md), str(args.input), "-o", str(old_dir), "--overwrite"]
         fast_command = [
-            "python3",
+            sys.executable,
             str(args.fast),
             str(args.input),
             "-o",

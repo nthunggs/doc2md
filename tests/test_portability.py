@@ -13,7 +13,7 @@ import fitz
 import openpyxl
 from docx import Document
 
-from tools.fast_doc2md import convert_pdf_ocr
+from tools.fast_doc2md import convert_pdf_ocr, pdf_is_scanned
 from tools.verify_doc2md import verify
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -67,6 +67,13 @@ class PortabilityTests(unittest.TestCase):
                 if os.name == "nt":
                     checked = subprocess.run(f'cmd.exe /d /s /c ""{ROOT / "verify-doc2md.cmd"}" "{target}""', capture_output=True, text=True, encoding="utf-8")
                     self.assertEqual(checked.returncode, 0, checked.stderr)
+
+    def test_short_digital_pdf_does_not_require_ocr(self):
+        source = self.root / "short.pdf"
+        self.text_pdf(source)
+        scanned, statistics = pdf_is_scanned(source)
+        self.assertFalse(scanned)
+        self.assertLess(statistics["avg_chars"], 80)
 
     def test_ocr_keeps_page_markers_without_poppler_or_sidecar_overwrite(self):
         source = self.root / "scan.pdf"
