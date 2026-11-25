@@ -1,8 +1,20 @@
 # Doc2MD
 
-Công cụ của team để chuyển **DOCX, XLSX, PDF digital và PDF scan** sang Markdown trên máy cục bộ. Repo riêng tư này chứa mã công cụ và dữ liệu kiểm thử được tạo tự động; không chứa hồ sơ nghiệp vụ.
+Công cụ của team để chuyển **DOCX, XLSX, PDF digital và PDF scan** sang Markdown trên máy cục bộ. Repo này chứa mã công cụ và dữ liệu kiểm thử được tạo tự động; không chứa hồ sơ nghiệp vụ.
 
-## Cài đặt
+## Windows — bắt đầu nhanh
+
+Cài Python 3.12, tải ZIP hoặc clone repo, mở PowerShell trong thư mục repo:
+
+```powershell
+.\setup-windows.cmd
+.\doc2md.cmd "C:\Tai lieu\Tài liệu.pdf" -o "C:\Tai lieu\Ket qua"
+.\verify-doc2md.cmd "C:\Tai lieu\Ket qua\Tài liệu.md" --require-pages
+```
+
+Xem **[hướng dẫn Windows đầy đủ](docs/windows.md)** để cài OCR tiếng Việt/Anh (`setup-windows.cmd --ocr`), dùng Word/Excel và xử lý lỗi. Không cần kích hoạt `.venv` hay thay đổi execution policy. Hỗ trợ Windows 10/11 64-bit; CI kiểm tra Python 3.10 và 3.12, với OCR thật trên 3.12.
+
+## Cài đặt macOS/Linux
 
 Cần Python **3.10 trở lên**:
 
@@ -18,7 +30,7 @@ Các phiên bản trong `requirements.txt` là bộ dependency đã kiểm thử
 
 - **DOCX:** khuyến nghị cài Pandoc để xử lý bảng, ảnh và định dạng tốt hơn. Nếu không có, chương trình dùng `python-docx` để lấy đoạn văn và tiêu đề; nhánh dự phòng này không chuyển bảng/ảnh.
 - **PDF scan trên macOS:** dùng Apple Vision khi có trình biên dịch `swiftc` (Xcode Command Line Tools). Helper Swift nằm trong `tools/vision_ocr.swift` và được biên dịch khi cần.
-- **PDF scan trên hệ điều hành khác:** cần OCRmyPDF, Poppler (`pdftotext`) và dữ liệu Tesseract `vie`/`eng` đã cài. Khi cả OCRmyPDF và `pdftotext` có sẵn, chương trình ưu tiên backend này, kể cả trên macOS.
+- **PDF scan trên hệ điều hành khác:** cần OCRmyPDF và Tesseract với dữ liệu `vie`/`eng`/`osd`. Chương trình ưu tiên OCRmyPDF khi có sẵn, kể cả trên macOS. Nhánh này dùng PyMuPDF đọc kết quả, không yêu cầu Poppler.
 - DOC/XLS cũ chưa được CLI nhận trực tiếp. Dùng WPS Office để lưu **bản sao** thành DOCX/XLSX trước; giữ nguyên file gốc.
 
 Việc cài dependency có thể cần mạng. Pipeline chuyển đổi không gọi API AI bên ngoài để gửi tài liệu đi.
@@ -62,7 +74,7 @@ Verifier trả JSON và mã thoát khác 0 khi thiếu số từ yêu cầu, có
 
 **Giới hạn cần biết:**
 
-- Mốc `<!-- Page N -->` được tạo trong nhánh PDF digital và Apple Vision. Nhánh OCRmyPDF hiện xuất text qua `pdftotext`, chưa chèn mốc trang dạng này; không dùng `--require-pages` cho nhánh đó.
+- Mốc `<!-- Page N -->` được giữ trong cả ba nhánh: PDF digital, Apple Vision và OCRmyPDF.
 - OCR có thể sai dấu, số hoặc ký tự. Bảng scan, biểu mẫu phức tạp và văn bản nhiều cột cần đối chiếu với nguồn.
 - XLSX đọc giá trị đã cache (`data_only=True`), không tính lại công thức. Công thức chưa có giá trị cache có thể cho ô trống.
 - Verifier kiểm tra cấu trúc và một số dấu hiệu lỗi, không chứng minh nội dung chuyển đổi đầy đủ hoặc chính xác tuyệt đối.
@@ -74,7 +86,7 @@ Verifier trả JSON và mã thoát khác 0 khi thiếu số từ yêu cầu, có
 PYTHONDONTWRITEBYTECODE=1 python -m unittest discover -s tests -v
 ```
 
-Bộ 5 test hiện có kiểm tra lấy mẫu trang, PDF bảng không đường viền, nhánh PDF nhanh, XLSX không sinh header giả và mức tăng bộ nhớ Python khi xử lý PDF dài. Fixture được sinh trong thư mục tạm và tự dọn sau mỗi test. Bộ này chưa kiểm thử tích hợp OCR/Pandoc.
+Bộ kiểm thử kiểm tra lấy mẫu trang, PDF bảng, nhánh PDF nhanh, XLSX, bộ nhớ Python, tên file tiếng Việt/khoảng trắng, CLI Windows, giữ nguyên nguồn, từ chối ghi đè và dọn file tạm OCR. CI Windows Python 3.12 chạy thêm OCR thật với Tesseract và ngôn ngữ Việt/Anh; các job còn lại bỏ qua test OCR tích hợp nếu chưa bật. Fixture được sinh trong thư mục tạm và tự dọn. Xem [kết quả CI](https://github.com/nthunggs/doc2md/actions/workflows/tests.yml). Chưa kiểm thử tích hợp Pandoc.
 
 `tools/benchmark_doc2md.py` là tiện ích so sánh với một bản converter cũ do người chạy cung cấp qua `--doc2md`; xem `--help` để dùng. Không kèm hồ sơ hay kết quả benchmark nội bộ.
 

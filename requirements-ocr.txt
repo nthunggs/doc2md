@@ -1,0 +1,2 @@
+# Optional native Windows/Linux OCR backend; requires Python 3.11+ and Tesseract.
+ocrmypdf==17.14.2

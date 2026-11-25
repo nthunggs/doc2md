@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import html
 import json
+import os
 import platform
 import shutil
 import subprocess
@@ -32,7 +33,13 @@ class PdfTableRegion:
 
 
 def run(command: list[str]) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(command, capture_output=True, text=True, check=False)
+    return subprocess.run(command, capture_output=True, text=True, encoding="utf-8", errors="replace", check=False)
+
+
+def find_executable(name: str) -> str | None:
+    """Also find tools installed beside the interpreter without venv activation."""
+    search_path = str(Path(sys.executable).parent) + os.pathsep + os.environ.get("PATH", "")
+    return shutil.which(name, path=search_path)
 
 
 def markdown_cell(value: object) -> str:
@@ -64,7 +71,7 @@ def markdown_table(rows: Iterable[Iterable[object]]) -> str:
 
 
 def convert_docx(input_path: Path, output_path: Path) -> None:
-    pandoc = shutil.which("pandoc")
+    pandoc = find_executable("pandoc")
     if pandoc:
         media_dir = output_path.parent / f"{output_path.stem}_media"
         result = run(
@@ -326,29 +333,26 @@ def convert_pdf_digital(input_path: Path, output_path: Path, layout: str = "fast
 
 
 def convert_pdf_ocr(input_path: Path, output_path: Path) -> None:
-    ocrmypdf = shutil.which("ocrmypdf")
-    pdftotext = shutil.which("pdftotext")
-    if ocrmypdf and pdftotext:
-        searchable_pdf = output_path.with_suffix(".ocr.pdf")
-        result = run(
-            [
-                ocrmypdf,
-                "--skip-text",
-                "--deskew",
-                "--rotate-pages",
-                "--language",
-                "vie+eng",
-                str(input_path),
-                str(searchable_pdf),
-            ]
-        )
-        if result.returncode != 0:
-            raise RuntimeError(result.stderr.strip() or "OCR failed")
-        extracted = run([pdftotext, "-layout", "-enc", "UTF-8", str(searchable_pdf), "-"])
-        if extracted.returncode != 0:
-            raise RuntimeError(extracted.stderr.strip() or "Text extraction after OCR failed")
-        output_path.write_text(extracted.stdout, encoding="utf-8")
-        searchable_pdf.unlink(missing_ok=True)
+    ocrmypdf = find_executable("ocrmypdf")
+    if ocrmypdf:
+        with tempfile.TemporaryDirectory(prefix="doc2md-ocr-") as temporary:
+            searchable_pdf = Path(temporary) / "searchable.pdf"
+            result = run(
+                [
+                    ocrmypdf,
+                    "--skip-text",
+                    "--deskew",
+                    "--rotate-pages",
+                    "--output-type", "pdf",
+                    "--optimize", "0",
+                    "--language", "vie+eng",
+                    str(input_path),
+                    str(searchable_pdf),
+                ]
+            )
+            if result.returncode != 0:
+                raise RuntimeError(result.stderr.strip() or "OCR failed; check Tesseract and vie/eng language data")
+            convert_pdf_digital(searchable_pdf, output_path, layout="fast")
         return
 
     if platform.system() == "Darwin" and shutil.which("swiftc"):
@@ -375,7 +379,11 @@ def convert_pdf_ocr(input_path: Path, output_path: Path) -> None:
             raise RuntimeError(ocr_result.stderr.strip() or "Apple Vision OCR failed")
         return
 
-    raise RuntimeError("PDF scan requires OCRmyPDF or macOS Apple Vision")
+    raise RuntimeError(
+        "PDF scan requires OCRmyPDF and Tesseract (vie+eng). "
+        "Windows: run setup-windows.cmd --ocr and follow docs/windows.md. "
+        "macOS can alternatively use Apple Vision with swiftc."
+    )
 
 
 def convert(
